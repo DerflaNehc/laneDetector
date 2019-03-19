@@ -8,7 +8,7 @@ def do_canny(frame):
     # Applies a 5x5 gaussian blur with deviation of 0 to frame - not mandatory since Canny will do this for us
     blur = cv.GaussianBlur(gray, (5, 5), 0)
     # Applies Canny edge detector with minVal of 50 and maxVal of 150
-    canny = cv.Canny(blur, 20, 30)
+    canny = cv.Canny(blur, 50, 150)
     return canny
 
 def do_segment(frame):
@@ -17,7 +17,7 @@ def do_segment(frame):
     height = frame.shape[0]
     # Creates a triangular polygon for the mask defined by three (x, y) coordinates
     polygons = np.array([
-                            [(190 , height), (800, height), (520, 400)]
+                            [(200 , height), (1000, height), (650, 300)]
                         ])
     # Creates an image filled with zero intensities with the same dimensions as the frame
     mask = np.zeros_like(frame)
@@ -76,7 +76,7 @@ def visualize_lines(frame, lines):
 
 # The video feed is read in as a VideoCapture object
 
-cap = cv.imread("images/e64b186f-8eaa879b.jpg")
+cap = cv.imread("images/str_2.jpg")
 canny = do_canny(cap)
 cv.imshow("canny", canny)
 # cv.waitKey(0)
