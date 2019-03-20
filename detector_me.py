@@ -17,7 +17,7 @@ def do_segment(frame):
     height = frame.shape[0]
     # Creates a triangular polygon for the mask defined by three (x, y) coordinates
     polygons = np.array([
-                            [(150 , height), (1100, height), (650, 400)]
+                            [(150 , height), (1100, height), (650, 300)]
                         ])
     # Creates an image filled with zero intensities with the same dimensions as the frame
     mask = np.zeros_like(frame)
@@ -70,7 +70,7 @@ def calculate_coordinates(frame, parameters):
     x2 = int((y2 - intercept) / slope)
     return np.array([x1, y1, x2, y2])
 
-def visualize_lines(frame, lines):
+def visualize_lines(frame, lines, allorNah):
     # Creates an image filled with zero intensities with the same dimensions as the frame
     lines_visualize = np.zeros_like(frame)
     # Checks if any lines are detected
@@ -79,30 +79,37 @@ def visualize_lines(frame, lines):
     else:
         line2 = lines
     if line2 is not None:
-        for x1, y1, x2, y2 in line2:
+        for line in line2:
+            x1, y1, x2, y2 = line.reshape(4)
+
             # Draws lines between two coordinates with green color and 5 thickness
-            cv.line(lines_visualize, (x1, y1), (x2, y2), (0, 255, 0), 5)
+            if allorNah:
+                cv.line(lines_visualize, (x1, y1), (x2, y2), (0, 255, 0), 5)
+            else:
+                cv.line(lines_visualize, (x1, y1), (x2, y2), (0, 0, 255), 5)
     return lines_visualize
 
 # The video feed is read in as a VideoCapture object
 
-cap = cv.imread("images/str_2.jpg")
+cap = cv.imread("images/slight1_lane.jpg")
 canny = do_canny(cap)
 cv.imshow("canny", canny)
 # cv.waitKey(0)
 
 segment = do_segment(canny)
-cv.imshow("segment", segment)
+# cv.imshow("segment", segment)
 
 hough = cv.HoughLinesP(segment, 2, np.pi / 180, 100, np.array([]), minLineLength = 100, maxLineGap = 50)
+lines_all = visualize_lines(cap, hough,True)
 # Averages multiple detected lines from hough into one line for left border of lane and one line for right border of lane
 lines = calculate_lines(cap, hough)
 # Visualizes the lines
-lines_visualize = visualize_lines(cap, lines)
+lines_visualize = visualize_lines(cap, lines,False)
 # cv.imshow("hough", lines_visualize)
 
 # Overlays lines on frame by taking their weighted sums and adding an arbitrary scalar value of 1 as the gamma argument
-output = cv.addWeighted(cap, 0.9, lines_visualize, 1, 1)
+output = cv.addWeighted(cap, 0.9, lines_all, 1, 1)
+output = cv.addWeighted(output, 0.9, lines_visualize, 1, 1)
 # Opens a new window and displays the output frame
 cv.imshow("output", output)
 cv.waitKey(0)
