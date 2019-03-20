@@ -17,7 +17,7 @@ def do_segment(frame):
     height = frame.shape[0]
     # Creates a triangular polygon for the mask defined by three (x, y) coordinates
     polygons = np.array([
-                            [(200 , height), (1000, height), (650, 300)]
+                            [(150 , height), (1100, height), (650, 400)]
                         ])
     # Creates an image filled with zero intensities with the same dimensions as the frame
     mask = np.zeros_like(frame)
@@ -48,8 +48,14 @@ def calculate_lines(frame, lines):
     left_avg = np.average(left, axis = 0)
     right_avg = np.average(right, axis = 0)
     # Calculates the x1, y1, x2, y2 coordinates for the left and right lines
-    left_line = calculate_coordinates(frame, left_avg)
-    right_line = calculate_coordinates(frame, right_avg)
+    if (not np.isnan(left_avg).all()):
+        left_line = calculate_coordinates(frame, left_avg)
+    else:
+        left_line = np.array([])
+    if (not np.isnan(right_avg).all()):
+        right_line = calculate_coordinates(frame, right_avg)
+    else:
+        right_line = np.array([])
     return np.array([left_line, right_line])
 
 def calculate_coordinates(frame, parameters):
@@ -57,7 +63,7 @@ def calculate_coordinates(frame, parameters):
     # Sets initial y-coordinate as height from top down (bottom of the frame)
     y1 = frame.shape[0]
     # Sets final y-coordinate as 150 above the bottom of the frame
-    y2 = int(y1 - 300)
+    y2 = int(y1 - 200)
     # Sets initial x-coordinate as (y1 - b) / m since y1 = mx1 + b
     x1 = int((y1 - intercept) / slope)
     # Sets final x-coordinate as (y2 - b) / m since y2 = mx2 + b
@@ -68,8 +74,12 @@ def visualize_lines(frame, lines):
     # Creates an image filled with zero intensities with the same dimensions as the frame
     lines_visualize = np.zeros_like(frame)
     # Checks if any lines are detected
-    if lines is not None:
-        for x1, y1, x2, y2 in lines:
+    if (any([x.size==0 for x in lines])):
+        line2 = np.delete(lines,np.where([x.size==0 for x in lines]))
+    else:
+        line2 = lines
+    if line2 is not None:
+        for x1, y1, x2, y2 in line2:
             # Draws lines between two coordinates with green color and 5 thickness
             cv.line(lines_visualize, (x1, y1), (x2, y2), (0, 255, 0), 5)
     return lines_visualize
